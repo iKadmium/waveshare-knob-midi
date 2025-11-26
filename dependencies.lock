@@ -1,0 +1,27 @@
+dependencies:
+  idf:
+    source:
+      type: idf
+    version: 6.1.0
+  lvgl/lvgl:
+    component_hash: 17e68bfd21f0edf4c3ee838e2273da840bf3930e5dbc3bfa6c1190c3aed41f9f
+    dependencies: []
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 9.4.0
+  midibox_blemidi:
+    component_hash: f72b35e395139a62f80ecfb94958f6ca588f61279c5ba6fdc8618ce4f5c5a82e
+    dependencies: []
+    source:
+      git: https://github.com/midibox/esp32-idf-blemidi.git
+      path: components/blemidi
+      type: git
+    version: 8453c92dd7c7feab894127cbcc6cd24e4281016c
+direct_dependencies:
+- idf
+- lvgl/lvgl
+- midibox_blemidi
+manifest_hash: 6a6a5b1c1fea44a301391ad381822a28fa8f40563a41df43c913446ce3ec5d8f
+target: esp32
+version: 2.0.0
