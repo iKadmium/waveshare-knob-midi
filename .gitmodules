@@ -1,3 +1,0 @@
-[submodule "components/blemidi"]
-	path = components/blemidi
-	url = https://github.com/midibox/esp32-idf-blemidi.git

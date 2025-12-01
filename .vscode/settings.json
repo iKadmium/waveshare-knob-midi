@@ -8,5 +8,8 @@
   "idf.toolsPath": "/opt/esp",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32"
-  }
+  },
+  "idf.projectPath": "${workspaceFolder}/esp32",
+  "idf.buildPath": "${workspaceFolder}/esp32/build",
+  "cmake.sourceDirectory": "/workspaces/waveshare-knob-midi/esp32"
 }

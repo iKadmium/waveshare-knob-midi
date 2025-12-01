@@ -1,0 +1,10 @@
+button.danger {
+    background-color: #ff0101;
+    color: var(--pico-background);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
