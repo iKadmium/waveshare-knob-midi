@@ -12,12 +12,13 @@
 				"idf.gitPath": "/usr/bin/git"
 			},
 			"extensions": [
-				"espressif.esp-idf-extension",
-				"espressif.esp-idf-web",
 				"svelte.svelte-vscode",
-				"ms-vscode.cmake-tools"
+				"rust-lang.rust-analyzer",
+				"tamasfe.even-better-toml"
 			]
 		}
 	},
-	"runArgs": ["--privileged"]
+	"runArgs": [
+		"--privileged"
+	]
 }
