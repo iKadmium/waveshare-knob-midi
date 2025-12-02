@@ -1,0 +1,18 @@
+[package]
+name = "waveshare-knob-midi-esp32"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "waveshare-knob-midi-esp32"
+harness = false
+
+[dependencies]
+log.workspace = true
+waveshare-knob-midi-core = { path = "../core" }
+esp-idf-svc = "0.51"
+# lvgl = { workspace = true, features = [] }  # TODO: Fix bindgen cross-compilation
+
+[build-dependencies]
+embuild = "0.33"
