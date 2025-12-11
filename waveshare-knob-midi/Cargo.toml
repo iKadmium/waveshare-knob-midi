@@ -1,18 +1,23 @@
-[workspace]
-members = ["core", "esp32", "sdl"]
-resolver = "2"
-
-[workspace.package]
+[package]
+name = "waveshare-knob-midi"
 version = "0.1.0"
 authors = ["Jesse Higginson <kadmium@gmail.com>"]
 edition = "2021"
 
-[workspace.dependencies]
+[[bin]]
+name = "waveshare-knob-midi"
+harness = false
+
+[dependencies]
 log = "0.4"
 lvgl = { version = "0.6.2", default-features = false }
+esp-idf-svc = "0.51"
 
 [profile.release]
 opt-level = "s"
+
+[build-dependencies]
+embuild = "0.33"
 
 [profile.dev]
 debug = true

@@ -1,6 +1,5 @@
 [build]
-# Uncomment to default to ESP32 target:
-# target = "xtensa-esp32s3-espidf"
+target = "xtensa-esp32s3-espidf"
 
 [target.xtensa-esp32s3-espidf]
 linker = "ldproxy"
