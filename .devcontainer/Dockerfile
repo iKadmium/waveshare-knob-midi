@@ -1,23 +1,61 @@
-ARG DOCKER_TAG=latest
-FROM espressif/idf:${DOCKER_TAG}
+# Dockerfile
+ARG VARIANT=bookworm
+FROM mcr.microsoft.com/devcontainers/cpp:${VARIANT}
 
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
+# Add your LVGL and simulator-specific packages
+RUN sudo apt-get update && sudo apt-get install -y \
+  libsdl2-dev \
+  libsdl2-image-dev \
+  libwayland-dev \
+  python3 \
+  python3-pip \
+  python3-venv \
+  libspdlog-dev \
+  udev \
+  usbutils \
+  picocom \
+  minicom \
+  screen
 
-RUN apt-get update -y && apt-get install udev -y
+## Set up udev rules for PlatformIO
+RUN curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
+RUN service udev restart 
+RUN usermod -a -G dialout vscode
+RUN usermod -a -G plugdev vscode
 
-# install nvm
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+ARG FEDORA_COMPAT=0
+### Set up compatibility with Fedora host (if needed)
+### Since Fedora uses `18` as the group for dialout, we need to add it to the container
+RUN if [ "$FEDORA_COMPAT" = "1" ]; then \
+  sudo groupadd -g 18 compat_dialout; \
+  sudo usermod -a -G compat_dialout vscode; \
+fi
+  
+# Create a dedicated virtual environment for PlatformIO
 
-# set env
-ENV NVM_DIR=/root/.nvm
+USER vscode
 
-# install node
-RUN echo "Installing Node.js version lol: $NODE_VERSION"
-RUN bash -c "source $NVM_DIR/nvm.sh && nvm install --lts"
+# Create venv in home directory with proper permissions
+RUN python3 -m venv /home/vscode/platformio-venv && \
+    chmod +x /home/vscode/platformio-venv/bin/activate
 
-RUN echo "source /opt/esp/idf/export.sh > /dev/null 2>&1" >> ~/.bashrc
+# Install PlatformIO into the virtual environment
+RUN /home/vscode/platformio-venv/bin/pip install platformio
 
-ENTRYPOINT [ "/opt/esp/entrypoint.sh" ]
+ARG cache-bust=2
 
-CMD ["/bin/bash", "-c"]
+WORKDIR /tmp
+
+COPY ./esp32/platformio.ini ./platformio.ini
+
+# Pre-install dependencies
+RUN /home/vscode/platformio-venv/bin/pio pkg install -p espressif32 && \
+  mkdir -p src && \
+  echo "// dummy file" > src/main.cpp && \
+  /home/vscode/platformio-venv/bin/pio pkg install -e esp32-s3-devkitc-1 && \
+  /home/vscode/platformio-venv/bin/pio pkg install -e native && \
+  sudo rm -rf /tmp/platformio.ini /tmp/src
+
+# Add the venv bin directory to PATH
+ENV PATH="/home/vscode/platformio-venv/bin:$PATH"
+ENV PLATFORMIO_CORE_DIR="/home/vscode/.platformio"

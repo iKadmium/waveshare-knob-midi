@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"name": "root",
+			"path": "."
+		},
+		{
+			"name": "esp32",
+			"path": "esp32"
+		},
+		{
+			"name": "svelte",
+			"path": "svelte"
+		}
+	]
+}

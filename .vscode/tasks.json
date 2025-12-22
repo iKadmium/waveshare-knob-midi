@@ -1,0 +1,31 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "PlatformIO: Build (native)",
+            "type": "shell",
+            "command": "pio run -e native",
+            "options": {
+                "cwd": "${workspaceFolder}/esp32"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "PlatformIO: Upload and Pre-Debug (esp32-s3-devkitc-1)",
+            "type": "shell",
+            "command": "pio run -e esp32-s3-devkitc-1 -t upload",
+            "options": {
+                "cwd": "${workspaceFolder}/esp32"
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        }
+    ]
+}

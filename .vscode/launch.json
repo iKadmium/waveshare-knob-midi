@@ -2,14 +2,34 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "gdbtarget",
-      "request": "attach",
-      "name": "Eclipse CDT GDB Adapter"
+      "type": "cppdbg",
+      "request": "launch",
+      "name": "Debug Native Build",
+      "program": "${workspaceFolder}/esp32/.pio/build/native/program",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/esp32",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "PlatformIO: Build (native)"
     },
     {
-      "type": "espidf",
-      "name": "Launch",
-      "request": "launch"
+      "type": "platformio-debug",
+      "request": "launch",
+      "name": "Debug ESP32-S3",
+      "executable": "${workspaceFolder}/esp32/.pio/build/esp32-s3-devkitc-1/firmware.elf",
+      "projectEnvName": "esp32-s3-devkitc-1",
+      "toolchainBinDir": "${userHome}/.platformio/packages/toolchain-xtensa-esp32s3/bin",
+      "internalConsoleOptions": "openOnSessionStart",
+      "preLaunchTask": "PlatformIO: Upload and Pre-Debug (esp32-s3-devkitc-1)"
     }
   ]
 }

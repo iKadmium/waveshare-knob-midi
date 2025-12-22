@@ -11,5 +11,8 @@
   },
   "idf.projectPath": "${workspaceFolder}/esp32",
   "idf.buildPath": "${workspaceFolder}/esp32/build",
-  "cmake.sourceDirectory": "/workspaces/waveshare-knob-midi/esp32"
+  "cmake.sourceDirectory": "/workspaces/waveshare-knob-midi/esp32",
+  "platformio-ide.useDevelopmentPIOCore": false,
+  "platformio-ide.pioHomeServerHttpHost": "127.0.0.1",
+  "platformio-ide.customPATH": "/home/vscode/platformio-venv/bin"
 }
