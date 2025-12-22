@@ -10,14 +10,17 @@ harness = false
 
 [dependencies]
 log = "0.4"
-lvgl = { version = "0.6.2", default-features = false }
+lvgl = { git = "https://github.com/rafaelcaricio/lvgl-rs", default-features = false, features = [
+    "unsafe_no_autoinit",
+] }
 esp-idf-svc = "0.51"
-
-[profile.release]
-opt-level = "s"
 
 [build-dependencies]
 embuild = "0.33"
+esp-idf-sys = "0.36"
+
+[profile.release]
+opt-level = "s"
 
 [profile.dev]
 debug = true

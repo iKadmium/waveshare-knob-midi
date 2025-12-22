@@ -7,7 +7,7 @@ ENV LANG=C.UTF-8
 
 USER root
 
-RUN apt-get update -y && apt-get install sudo udev libsdl2-dev -y
+RUN apt-get update -y && apt-get install sudo udev libsdl2-dev libclang-dev cmake -y
 RUN usermod -aG sudo esp
 
 RUN echo '%sudo ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/nopasswd_sudo
