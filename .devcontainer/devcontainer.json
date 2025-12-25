@@ -28,7 +28,6 @@
 	// Share M5Stack USB device and enable Wayland/GPU access
 	"runArgs": [
 		"--device=/dev/ttyACM0",
-		"--device=/dev/bus/usb",
 		"--userns=keep-id",
 		"--group-add",
 		"18",

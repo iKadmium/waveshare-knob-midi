@@ -1,22 +1,17 @@
 {
   "configurations": [
     {
-      "name": "ESP-IDF",
-      "compilerPath": "${config:idf.toolsPath}/tools/xtensa-esp-elf/esp-15.2.0_20250929/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc",
-      "compileCommands": "${config:idf.buildPath}/compile_commands.json",
+      "name": "PlatformIO",
+      "compilerPath": "/home/vscode/.platformio/packages/toolchain-xtensa-esp-elf/bin/xtensa-esp32s3-elf-gcc",
+      "compileCommands": "${workspaceFolder}/esp32/compile_commands.json",
       "includePath": [
-        "${config:idf.espIdfPath}/components/**",
-        "${config:idf.espIdfPathWin}/components/**",
-        "${workspaceFolder}/esp32/**"
+        "${workspaceFolder}/esp32/src",
+        "${workspaceFolder}/esp32/include",
+        "${workspaceFolder}/esp32/components/**"
       ],
-      "browse": {
-        "path": [
-          "${config:idf.espIdfPath}/components",
-          "${config:idf.espIdfPathWin}/components",
-          "${workspaceFolder}/esp32"
-        ],
-        "limitSymbolsToIncludedHeaders": true
-      }
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "gcc-x64"
     }
   ],
   "version": 4
