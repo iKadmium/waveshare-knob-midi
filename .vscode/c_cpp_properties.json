@@ -3,15 +3,17 @@
     {
       "name": "PlatformIO",
       "compilerPath": "/home/vscode/.platformio/packages/toolchain-xtensa-esp-elf/bin/xtensa-esp32s3-elf-gcc",
-      "compileCommands": "${workspaceFolder}/esp32/compile_commands.json",
       "includePath": [
         "${workspaceFolder}/esp32/src",
         "${workspaceFolder}/esp32/include",
-        "${workspaceFolder}/esp32/components/**"
+        "${workspaceFolder}/esp32/components/**",
+        "${workspaceFolder}/esp32/managed_components/**"
+      ],
+      "compilerArgs": [
+        "-DLV_CONF_PATH=${workspaceFolder}/esp32/include/lv_conf_sdl.h"
       ],
       "cStandard": "c11",
-      "cppStandard": "c++17",
-      "intelliSenseMode": "gcc-x64"
+      "cppStandard": "c++17"
     }
   ],
   "version": 4

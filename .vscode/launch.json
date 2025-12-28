@@ -9,7 +9,20 @@
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/esp32",
-      "environment": [],
+      "environment": [
+        {
+          "name": "SDL_VIDEODRIVER",
+          "value": "wayland"
+        },
+        {
+          "name": "WAYLAND_DISPLAY",
+          "value": "wayland-0"
+        },
+        {
+          "name": "XDG_RUNTIME_DIR",
+          "value": "/run/user/1000"
+        }
+      ],
       "externalConsole": false,
       "MIMode": "gdb",
       "setupCommands": [
@@ -25,11 +38,11 @@
       "type": "platformio-debug",
       "request": "launch",
       "name": "Debug ESP32-S3",
-      "executable": "${workspaceFolder}/esp32/.pio/build/esp32-s3-devkitc-1/firmware.elf",
-      "projectEnvName": "esp32-s3-devkitc-1",
+      "executable": "${workspaceFolder}/esp32/.pio/build/esp32-s3-idf/firmware.elf",
+      "projectEnvName": "esp32-s3-idf",
       "toolchainBinDir": "${userHome}/.platformio/packages/toolchain-xtensa-esp32s3/bin",
       "internalConsoleOptions": "openOnSessionStart",
-      "preLaunchTask": "PlatformIO: Upload and Pre-Debug (esp32-s3-devkitc-1)"
+      "preLaunchTask": "PlatformIO: Upload and Pre-Debug (esp32-s3-idf)"
     }
   ]
 }

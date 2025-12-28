@@ -17,9 +17,9 @@
             ]
         },
         {
-            "label": "PlatformIO: Upload and Pre-Debug (esp32-s3-devkitc-1)",
+            "label": "PlatformIO: Upload and Pre-Debug (esp32-s3-idf)",
             "type": "shell",
-            "command": "pio run -e esp32-s3-devkitc-1 -t upload",
+            "command": "pio run -e esp32-s3-idf -t upload",
             "options": {
                 "cwd": "${workspaceFolder}/esp32"
             },

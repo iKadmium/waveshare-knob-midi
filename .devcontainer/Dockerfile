@@ -42,8 +42,6 @@ RUN python3 -m venv /home/vscode/platformio-venv && \
 # Install PlatformIO into the virtual environment
 RUN /home/vscode/platformio-venv/bin/pip install platformio
 
-ARG cache-bust=2
-
 WORKDIR /tmp
 
 COPY ./esp32/platformio.ini ./platformio.ini
@@ -52,8 +50,7 @@ COPY ./esp32/platformio.ini ./platformio.ini
 RUN /home/vscode/platformio-venv/bin/pio pkg install -p espressif32 && \
   mkdir -p src && \
   echo "// dummy file" > src/main.cpp && \
-  /home/vscode/platformio-venv/bin/pio pkg install -e esp32-s3-devkitc-1 && \
-  /home/vscode/platformio-venv/bin/pio pkg install -e native && \
+  /home/vscode/platformio-venv/bin/pio pkg install && \
   sudo rm -rf /tmp/platformio.ini /tmp/src
 
 # Add the venv bin directory to PATH

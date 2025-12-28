@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "main.c"
+    SRCS "main.cpp" "hal.cpp" "hal_esp32.cpp"
     INCLUDE_DIRS "."
     REQUIRES driver i2c_bsp lcd_touch_bsp lcd_bl_pwm_bsp lvgl)
 

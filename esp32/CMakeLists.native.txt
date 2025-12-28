@@ -1,0 +1,58 @@
+cmake_minimum_required(VERSION 3.10)
+project(waveshare_knob_native)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Find SDL2
+find_package(SDL2 REQUIRED)
+
+# LVGL configuration
+# set(LV_CONF_INCLUDE_SIMPLE ON)
+
+# Include directories
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/managed_components/lvgl__lvgl
+    ${SDL2_INCLUDE_DIRS}
+)
+
+# Compile definitions
+add_definitions(-DLV_CONF_INCLUDE_SIMPLE -DLVGL_SDL)
+
+# LVGL sources
+file(GLOB_RECURSE LVGL_SOURCES 
+    "${CMAKE_CURRENT_SOURCE_DIR}/managed_components/lvgl__lvgl/src/*.c"
+)
+
+file(GLOB_RECURSE LVGL_DEMO_SOURCES 
+    "${CMAKE_CURRENT_SOURCE_DIR}/managed_components/lvgl__lvgl/demos/*.c"
+)
+
+# Project sources
+set(PROJECT_SOURCES
+    src/main.cpp
+    src/hal.cpp
+    src/hal_native.cpp
+)
+
+# Create executable
+add_executable(${PROJECT_NAME}
+    ${PROJECT_SOURCES}
+    ${LVGL_SOURCES}
+    ${LVGL_DEMO_SOURCES}
+)
+
+# Link libraries
+target_link_libraries(${PROJECT_NAME}
+    ${SDL2_LIBRARIES}
+    pthread
+    m
+)
+
+# Set output directory
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
