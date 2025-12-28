@@ -15,6 +15,3 @@ dependencies:
   #   # All dependencies of `main` are public by default.
   #   public: true
   lvgl/lvgl: ^9.4.0
-  midibox_blemidi:
-    git: https://github.com/midibox/esp32-idf-blemidi.git
-    path: components/blemidi

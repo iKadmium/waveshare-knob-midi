@@ -7,6 +7,7 @@
 #include "esp_system.h"
 #include "esp_log.h"
 
+#define BLEMIDI_DEVICE_NAME "Waveshare Knob"
 #include "blemidi.h"
 #include "ui.h"
 #include "attributes.h"
@@ -14,6 +15,15 @@
 #include <array>
 
 #define TAG "KadmiumBLE"
+
+// Provide missing esp_log_buffer_hex function for older blemidi library
+extern "C" void esp_log_buffer_hex(const char *tag, const void *buffer, uint16_t buff_len)
+{
+    // Stub implementation - you can expand this if needed
+    (void)tag;
+    (void)buffer;
+    (void)buff_len;
+}
 
 // Define program names for instruments
 static constexpr std::array<const char *, 6> tonex_programs = {
@@ -31,13 +41,13 @@ static void task_midi(void *pvParameters)
     blemidi_send_message(0, message.data(), message.size());
 }
 
-void callback_midi_message_received(uint8_t blemidi_port, uint16_t timestamp, uint8_t midi_status, uint8_t *remaining_message, size_t len)
+void callback_midi_message_received(uint8_t blemidi_port, uint16_t timestamp, uint8_t midi_status, uint8_t *remaining_message, size_t len, size_t continued_sysex_pos)
 {
     ESP_LOGI(TAG, "Received MIDI message on port %d, timestamp %d, status 0x%02x, length %d",
              blemidi_port, timestamp, midi_status, len + 1);
 }
 
-void app_main()
+extern "C" void app_main()
 {
     // Initialize MIDI attributes
     std::vector<attribute_t> midi_attributes;
@@ -86,7 +96,7 @@ void app_main()
     }
 
     // Initialize BLE MIDI
-    int status = blemidi_init(callback_midi_message_received);
+    int status = blemidi_init(reinterpret_cast<void *>(callback_midi_message_received));
     if (status < 0)
     {
         ESP_LOGE(BLEMIDI_TAG, "BLE MIDI Driver returned status=%d", status);

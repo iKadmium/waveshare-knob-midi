@@ -1,15 +1,14 @@
 {
   "idf.pythonInstallPath": "/usr/bin/python3",
   "idf.espIdfPath": "/opt/esp/idf",
-  "idf.openOcdConfigs": [
-    "board/esp32-wrover-kit-3.3v.cfg"
-  ],
   "idf.port": "/dev/ttyACM0",
   "idf.toolsPath": "/opt/esp",
   "idf.customExtraVars": {
-    "IDF_TARGET": "esp32"
+    "IDF_TARGET": "esp32s3"
   },
   "idf.projectPath": "${workspaceFolder}/esp32",
-  "idf.buildPath": "${workspaceFolder}/esp32/build",
-  "cmake.sourceDirectory": "/workspaces/waveshare-knob-midi/esp32"
+  "cmake.sourceDirectory": "/workspaces/waveshare-knob-midi/esp32",
+  "cmake.buildDirectory": "${workspaceFolder}/esp32/build",
+  "idf.buildPathWin": "${workspaceFolder}\\esp32\\build",
+  "idf.buildPath": "${workspaceFolder}/esp32/build"
 }

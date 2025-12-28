@@ -15,7 +15,8 @@
 				"espressif.esp-idf-extension",
 				"espressif.esp-idf-web",
 				"svelte.svelte-vscode",
-				"ms-vscode.cmake-tools"
+				"ms-vscode.cmake-tools",
+				"ms-vscode.cpptools-extension-pack"
 			]
 		}
 	},
