@@ -1,6 +1,8 @@
-idf_component_register(SRCS "main.cpp" "ui.cpp"
-                    INCLUDE_DIRS "."
-                    REQUIRES midibox_blemidi)
+idf_component_register(
+    SRCS "main.c"
+    INCLUDE_DIRS ".")
 
-# Disable warnings for your component (if needed)
-target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-error)
+set_source_files_properties(
+    ${LV_DEMOS_SOURCES}
+    PROPERTIES COMPILE_OPTIONS
+    -DLV_LVGL_H_INCLUDE_SIMPLE)
