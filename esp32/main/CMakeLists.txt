@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "main.cpp" "display_touch.cpp"
+    SRCS "main.cpp" "display_touch.cpp" "ui_components.cpp"
     INCLUDE_DIRS "."
     PRIV_REQUIRES driver
     REQUIRES user_encoder_bsp i2c_bsp lcd_touch_bsp lcd_bl_pwm_bsp)

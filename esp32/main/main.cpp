@@ -7,8 +7,14 @@
 #include "lv_demos.h"
 #include "display_touch.h"
 #include "user_encoder_bsp.h"
+#include "midi_model.h"
+#include "ui_components.h"
+#include <memory>
 
 static const char *TAG = "main";
+
+// Global UI state
+static PageView *currentPageView = nullptr;
 
 extern "C" void app_main(void)
 {
@@ -41,12 +47,38 @@ extern "C" void app_main(void)
     }
 
     // Display LVGL demos
-    ESP_LOGI(TAG, "Display LVGL demos");
+    ESP_LOGI(TAG, "Creating MIDI UI");
 
     // Lock the mutex due to the LVGL APIs are not thread-safe
     if (displayTouch->lock(-1))
     {
-        lv_demo_widgets(); // A widgets example
+        // Apply dark theme
+        lv_theme_t *theme = lv_theme_default_init(
+            lv_display_get_default(),
+            lv_palette_main(LV_PALETTE_BLUE),
+            lv_palette_main(LV_PALETTE_CYAN),
+            true, // dark mode
+            LV_FONT_DEFAULT);
+        lv_display_set_theme(lv_display_get_default(), theme);
+
+        // Create sample data
+        auto page1 = std::make_shared<Page>("Page 1");
+
+        // Add CC parameters
+        page1->addParameter(std::make_shared<CCParameter>("Cutoff", 0, 74));
+        page1->addParameter(std::make_shared<CCParameter>("Resonance", 0, 71));
+        page1->addParameter(std::make_shared<CCParameter>("Attack", 0, 73));
+
+        // Add Program Change parameter with instrument names
+        std::vector<std::string> instruments = {
+            "Piano", "Organ", "Guitar", "Bass", "Strings",
+            "Brass", "Synth Lead", "Synth Pad", "Drums"};
+        page1->addParameter(std::make_shared<ProgramChangeParameter>(
+            "Instrument", 0, instruments));
+
+        // Create UI
+        lv_obj_t *screen = lv_screen_active();
+        currentPageView = new PageView(screen, page1);
 
         displayTouch->unlock();
     }
@@ -66,13 +98,25 @@ extern "C" void app_main(void)
 
         if (bits & 0x01)
         {
-            // Bit 0 set - left rotation
+            // Bit 0 set - left rotation (decrement value)
             ESP_LOGI(TAG, "Encoder: Left rotation detected");
+
+            if (displayTouch->lock(100) && currentPageView)
+            {
+                currentPageView->incrementValue(-1);
+                displayTouch->unlock();
+            }
         }
         if (bits & 0x02)
         {
-            // Bit 1 set - right rotation
+            // Bit 1 set - right rotation (increment value)
             ESP_LOGI(TAG, "Encoder: Right rotation detected");
+
+            if (displayTouch->lock(100) && currentPageView)
+            {
+                currentPageView->incrementValue(1);
+                displayTouch->unlock();
+            }
         }
     }
 }
