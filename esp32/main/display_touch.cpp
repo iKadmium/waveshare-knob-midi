@@ -7,6 +7,7 @@
 #include "i2c_bsp.h"
 #include "lcd_touch_bsp.h"
 #include "lcd_bl_pwm_bsp.h"
+#include "user_encoder_bsp.h"
 #include <cstring>
 
 static const char *TAG = "DisplayTouch";
@@ -510,6 +511,15 @@ esp_err_t DisplayTouch::init()
     }
 
     ESP_LOGI(TAG, "Display and touch initialized successfully");
+    return ESP_OK;
+}
+
+// Initialize rotary encoder using BSP
+esp_err_t DisplayTouch::initEncoder()
+{
+    ESP_LOGI(TAG, "Initializing rotary encoder using BSP");
+    user_encoder_init();
+    ESP_LOGI(TAG, "Rotary encoder initialized successfully");
     return ESP_OK;
 }
 

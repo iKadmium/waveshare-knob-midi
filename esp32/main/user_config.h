@@ -1,6 +1,8 @@
 #ifndef USER_CONFIG_H
 #define USER_CONFIG_H
 
+#include "driver/gpio.h"
+
 // spi & i2c handle
 #define LCD_HOST SPI2_HOST
 #define TOUCH_HOST I2C_NUM_0
@@ -8,6 +10,10 @@
 // I2C
 #define ESP32_SCL_NUM (GPIO_NUM_12)
 #define ESP32_SDA_NUM (GPIO_NUM_11)
+
+// ENCODER
+#define EXAMPLE_ENCODER_ECA_PIN (gpio_num_t)8
+#define EXAMPLE_ENCODER_ECB_PIN (gpio_num_t)7
 
 //  DISP
 // The pixel number in horizontal and vertical
@@ -35,9 +41,6 @@
 #define EXAMPLE_LVGL_TASK_PRIORITY 2
 
 #define EXAMPLE_USE_TOUCH 1 // Without tp ---- Touch off
-
-// #define Backlight_Testing
-// #define EXAMPLE_Rotate_90
 
 // bit
 

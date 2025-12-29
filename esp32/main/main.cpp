@@ -1,35 +1,14 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
 #include "esp_log.h"
 #include "lvgl.h"
 #include "lv_demos.h"
 #include "display_touch.h"
+#include "user_encoder_bsp.h"
 
 static const char *TAG = "main";
-
-#ifdef Backlight_Testing
-#include "lcd_bl_pwm_bsp.h"
-
-void backlight_test_task(void *arg)
-{
-    for (;;)
-    {
-        setUpduty(LCD_PWM_MODE_255);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        setUpduty(LCD_PWM_MODE_200);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        setUpduty(LCD_PWM_MODE_150);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        setUpduty(LCD_PWM_MODE_100);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        setUpduty(LCD_PWM_MODE_50);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        setUpduty(LCD_PWM_MODE_0);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-#endif
 
 extern "C" void app_main(void)
 {
@@ -45,6 +24,14 @@ extern "C" void app_main(void)
         return;
     }
 
+    // Initialize rotary encoder
+    ret = displayTouch->initEncoder();
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to initialize encoder: %s", esp_err_to_name(ret));
+        return;
+    }
+
     // Start LVGL task
     ret = displayTouch->startLvglTask();
     if (ret != ESP_OK)
@@ -53,10 +40,6 @@ extern "C" void app_main(void)
         return;
     }
 
-#ifdef Backlight_Testing
-    xTaskCreate(backlight_test_task, "backlight", 3 * 1024, nullptr, 2, nullptr);
-#endif
-
     // Display LVGL demos
     ESP_LOGI(TAG, "Display LVGL demos");
 
@@ -64,18 +47,32 @@ extern "C" void app_main(void)
     if (displayTouch->lock(-1))
     {
         lv_demo_widgets(); // A widgets example
-        // lv_demo_music();      // A modern, smartphone-like music player demo
-        // lv_demo_stress();     // A stress test for LVGL
-        // lv_demo_benchmark();  // A demo to measure the performance of LVGL
 
         displayTouch->unlock();
     }
 
     ESP_LOGI(TAG, "Application started successfully");
 
-    // Keep app_main alive - LVGL task is running in background
+    // Main loop - monitor encoder events
     while (1)
     {
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        // Wait for encoder events (left or right rotation)
+        EventBits_t bits = xEventGroupWaitBits(
+            knob_even_,
+            0x03,    // Wait for bit 0 (left) or bit 1 (right)
+            pdTRUE,  // Clear bits on exit
+            pdFALSE, // Wait for ANY bit (not all)
+            pdMS_TO_TICKS(1000));
+
+        if (bits & 0x01)
+        {
+            // Bit 0 set - left rotation
+            ESP_LOGI(TAG, "Encoder: Left rotation detected");
+        }
+        if (bits & 0x02)
+        {
+            // Bit 1 set - right rotation
+            ESP_LOGI(TAG, "Encoder: Right rotation detected");
+        }
     }
 }
