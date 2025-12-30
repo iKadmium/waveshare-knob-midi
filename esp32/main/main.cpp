@@ -11,17 +11,17 @@
 #include "ui_components.h"
 #include <memory>
 
-static const char *TAG = "main";
+static const char* TAG = "main";
 
 // Global UI state
-static PageView *currentPageView = nullptr;
+static PageView* currentPageView = nullptr;
 
 extern "C" void app_main(void)
 {
     ESP_LOGI(TAG, "Starting application");
 
     // Create display/touch handler on heap to keep it alive
-    static DisplayTouch *displayTouch = new DisplayTouch();
+    static DisplayTouch* displayTouch = new DisplayTouch();
 
     esp_err_t ret = displayTouch->init();
     if (ret != ESP_OK)
@@ -53,7 +53,7 @@ extern "C" void app_main(void)
     if (displayTouch->lock(-1))
     {
         // Apply dark theme
-        lv_theme_t *theme = lv_theme_default_init(
+        lv_theme_t* theme = lv_theme_default_init(
             lv_display_get_default(),
             lv_palette_main(LV_PALETTE_BLUE),
             lv_palette_main(LV_PALETTE_CYAN),
@@ -65,19 +65,19 @@ extern "C" void app_main(void)
         auto page1 = std::make_shared<Page>("Page 1");
 
         // Add CC parameters
-        page1->addParameter(std::make_shared<CCParameter>("Cutoff", 0, 74));
-        page1->addParameter(std::make_shared<CCParameter>("Resonance", 0, 71));
-        page1->addParameter(std::make_shared<CCParameter>("Attack", 0, 73));
+        page1->addParameter(std::make_shared<CCParameter>("DAW", 0, 74));
+        page1->addParameter(std::make_shared<CCParameter>("Mic", 0, 71));
+        page1->addParameter(std::make_shared<CCParameter>("Guitar", 0, 73));
 
         // Add Program Change parameter with instrument names
         std::vector<std::string> instruments = {
-            "Piano", "Organ", "Guitar", "Bass", "Strings",
-            "Brass", "Synth Lead", "Synth Pad", "Drums"};
+            "Clean", "Crunch", "Rhythm", "Lead"
+        };
         page1->addParameter(std::make_shared<ProgramChangeParameter>(
-            "Instrument", 0, instruments));
-
+            "Instrument", 0, instruments)
+        );
         // Create UI
-        lv_obj_t *screen = lv_screen_active();
+        lv_obj_t* screen = lv_screen_active();
         currentPageView = new PageView(screen, page1);
 
         displayTouch->unlock();
@@ -98,23 +98,23 @@ extern "C" void app_main(void)
 
         if (bits & 0x01)
         {
-            // Bit 0 set - left rotation (decrement value)
+            // Bit 0 set - left rotation (decrement)
             ESP_LOGI(TAG, "Encoder: Left rotation detected");
 
             if (displayTouch->lock(100) && currentPageView)
             {
-                currentPageView->incrementValue(-1);
+                currentPageView->handleEncoderRotation(-1);
                 displayTouch->unlock();
             }
         }
         if (bits & 0x02)
         {
-            // Bit 1 set - right rotation (increment value)
+            // Bit 1 set - right rotation (increment)
             ESP_LOGI(TAG, "Encoder: Right rotation detected");
 
             if (displayTouch->lock(100) && currentPageView)
             {
-                currentPageView->incrementValue(1);
+                currentPageView->handleEncoderRotation(1);
                 displayTouch->unlock();
             }
         }

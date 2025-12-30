@@ -1,14 +1,15 @@
 #include "ui_components.h"
 #include "esp_log.h"
 #include <algorithm>
+#include <cstdlib>
 
-static const char *TAG = "UI_Components";
+static const char* TAG = "UI_Components";
 
 // ============================================================================
 // ValueDisplay Implementation
 // ============================================================================
 
-ValueDisplay::ValueDisplay(lv_obj_t *parent)
+ValueDisplay::ValueDisplay(lv_obj_t* parent)
 {
     // Create container - full screen
     container_ = lv_obj_create(parent);
@@ -41,11 +42,71 @@ ValueDisplay::ValueDisplay(lv_obj_t *parent)
     lv_style_set_arc_width(&style_arc_bg, 15);
     lv_obj_add_style(arc_, &style_arc_bg, LV_PART_MAIN);
 
-    // Create value label (centered) with large font
+    // Create mode indicator (top center for round display)
+    modeIndicator_ = lv_label_create(container_);
+    lv_label_set_text(modeIndicator_, "NAV");
+    lv_obj_set_style_text_font(modeIndicator_, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_color(modeIndicator_, lv_palette_main(LV_PALETTE_CYAN), 0);
+    lv_obj_align(modeIndicator_, LV_ALIGN_TOP_MID, 0, 10);
+
+    // Create previous parameter labels (above center, closer together)
+    prev3Label_ = lv_label_create(container_);
+    lv_label_set_text(prev3Label_, "");
+    lv_obj_set_style_text_font(prev3Label_, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(prev3Label_, lv_color_hex(0x606060), 0);
+    lv_obj_set_style_text_align(prev3Label_, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(prev3Label_, LV_ALIGN_CENTER, 0, -90);
+
+    prev2Label_ = lv_label_create(container_);
+    lv_label_set_text(prev2Label_, "");
+    lv_obj_set_style_text_font(prev2Label_, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(prev2Label_, lv_color_hex(0x808080), 0);
+    lv_obj_set_style_text_align(prev2Label_, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(prev2Label_, LV_ALIGN_CENTER, 0, -65);
+
+    prev1Label_ = lv_label_create(container_);
+    lv_label_set_text(prev1Label_, "");
+    lv_obj_set_style_text_font(prev1Label_, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_color(prev1Label_, lv_palette_main(LV_PALETTE_GREY), 0);
+    lv_obj_set_style_text_align(prev1Label_, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(prev1Label_, LV_ALIGN_CENTER, 0, -40);
+
+    // Create current parameter name label (centered, large)
+    nameLabel_ = lv_label_create(container_);
+    lv_label_set_text(nameLabel_, "Parameter");
+    lv_obj_set_style_text_font(nameLabel_, &lv_font_montserrat_28, 0);
+    lv_obj_set_style_text_color(nameLabel_, lv_palette_main(LV_PALETTE_BLUE), 0);
+    lv_obj_set_style_text_align(nameLabel_, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(nameLabel_, LV_ALIGN_CENTER, 0, -5);
+
+    // Create value label (centered, very large)
     valueLabel_ = lv_label_create(container_);
     lv_label_set_text(valueLabel_, "0");
     lv_obj_set_style_text_font(valueLabel_, &lv_font_montserrat_48, 0);
-    lv_obj_center(valueLabel_);
+    lv_obj_set_style_text_align(valueLabel_, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(valueLabel_, LV_ALIGN_CENTER, 0, 50);
+
+    // Create next parameter labels (below center, closer together)
+    next1Label_ = lv_label_create(container_);
+    lv_label_set_text(next1Label_, "");
+    lv_obj_set_style_text_font(next1Label_, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_color(next1Label_, lv_palette_main(LV_PALETTE_GREY), 0);
+    lv_obj_set_style_text_align(next1Label_, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(next1Label_, LV_ALIGN_CENTER, 0, 30);
+
+    next2Label_ = lv_label_create(container_);
+    lv_label_set_text(next2Label_, "");
+    lv_obj_set_style_text_font(next2Label_, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(next2Label_, lv_color_hex(0x808080), 0);
+    lv_obj_set_style_text_align(next2Label_, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(next2Label_, LV_ALIGN_CENTER, 0, 55);
+
+    next3Label_ = lv_label_create(container_);
+    lv_label_set_text(next3Label_, "");
+    lv_obj_set_style_text_font(next3Label_, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(next3Label_, lv_color_hex(0x606060), 0);
+    lv_obj_set_style_text_align(next3Label_, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(next3Label_, LV_ALIGN_CENTER, 0, 80);
 }
 
 ValueDisplay::~ValueDisplay()
@@ -56,161 +117,118 @@ ValueDisplay::~ValueDisplay()
     }
 }
 
-void ValueDisplay::setValue(uint8_t value)
+void ValueDisplay::updateParameterList(const std::vector<std::string>& names,
+    const std::vector<std::string>& values,
+    size_t selectedIndex,
+    uint8_t currentValue,
+    uint8_t maxValue,
+    UIMode mode)
 {
-    lv_arc_set_value(arc_, value);
-}
+    // Update mode indicator
+    lv_label_set_text(modeIndicator_, mode == UIMode::NAVIGATION ? "NAV" : "CTRL");
 
-void ValueDisplay::setValueText(const std::string &text)
-{
-    lv_label_set_text(valueLabel_, text.c_str());
-    lv_obj_center(valueLabel_);
-}
+    // Update arc with the actual numeric value
+    lv_arc_set_range(arc_, 0, maxValue);
+    lv_arc_set_value(arc_, currentValue);
 
-void ValueDisplay::setRange(uint8_t min, uint8_t max)
-{
-    lv_arc_set_range(arc_, min, max);
-}
-
-// ============================================================================
-// ParameterNameDisplay Implementation
-// ============================================================================
-
-ParameterNameDisplay::ParameterNameDisplay(lv_obj_t *parent)
-{
-    // Create container - positioned absolutely
-    container_ = lv_obj_create(parent);
-    lv_obj_set_size(container_, LV_PCT(80), LV_SIZE_CONTENT);
-    lv_obj_clear_flag(container_, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_border_width(container_, 0, 0);
-    lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_pad_all(container_, 5, 0);
-
-    // Position at top-center (above the value)
-    lv_obj_align(container_, LV_ALIGN_CENTER, 0, -60);
-
-    // Create name label with large font
-    nameLabel_ = lv_label_create(container_);
-    lv_label_set_text(nameLabel_, "Select Parameter");
-    lv_obj_set_style_text_align(nameLabel_, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_font(nameLabel_, &lv_font_montserrat_24, 0);
-    lv_obj_center(nameLabel_);
-}
-
-ParameterNameDisplay::~ParameterNameDisplay()
-{
-    if (container_)
+    // Highlight current parameter name in control mode
+    if (mode == UIMode::CONTROL)
     {
-        lv_obj_delete(container_);
+        lv_obj_set_style_text_color(nameLabel_, lv_palette_main(LV_PALETTE_GREEN), 0);
+        // Show value in control mode
+        lv_obj_clear_flag(valueLabel_, LV_OBJ_FLAG_HIDDEN);
+        // Hide all prev/next labels in control mode
+        lv_obj_add_flag(prev1Label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(prev2Label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(prev3Label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(next1Label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(next2Label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(next3Label_, LV_OBJ_FLAG_HIDDEN);
     }
-}
-
-void ParameterNameDisplay::setParameterName(const std::string &name)
-{
-    lv_label_set_text(nameLabel_, name.c_str());
-    lv_obj_center(nameLabel_);
-}
-
-// ============================================================================
-// ParameterSelector Implementation
-// ============================================================================
-
-ParameterSelector::ParameterSelector(lv_obj_t *parent)
-    : selectedIndex_(0), selectCallback_(nullptr)
-{
-
-    // Create container with flex layout - positioned at bottom
-    container_ = lv_obj_create(parent);
-    lv_obj_set_size(container_, LV_PCT(90), LV_SIZE_CONTENT);
-    lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_all(container_, 3, 0);
-    lv_obj_set_style_pad_gap(container_, 3, 0);
-    lv_obj_set_style_border_width(container_, 0, 0);
-    lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, 0);
-
-    // Position at bottom-center
-    lv_obj_align(container_, LV_ALIGN_BOTTOM_MID, 0, -10);
-}
-
-ParameterSelector::~ParameterSelector()
-{
-    if (container_)
+    else
     {
-        lv_obj_delete(container_);
-    }
-}
-
-void ParameterSelector::setParameters(const std::vector<std::string> &paramNames)
-{
-    // Clear existing buttons
-    for (auto btn : buttons_)
-    {
-        lv_obj_delete(btn);
-    }
-    buttons_.clear();
-
-    // Create new buttons
-    for (size_t i = 0; i < paramNames.size(); i++)
-    {
-        lv_obj_t *btn = lv_button_create(container_);
-        lv_obj_set_size(btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-
-        // Initialize all buttons with grey color
-        lv_obj_set_style_bg_color(btn, lv_palette_main(LV_PALETTE_GREY), 0);
-
-        lv_obj_t *label = lv_label_create(btn);
-        lv_label_set_text(label, paramNames[i].c_str());
-        lv_obj_center(label);
-
-        // Store index as user data
-        lv_obj_set_user_data(btn, (void *)i);
-        lv_obj_add_event_cb(btn, buttonEventHandler, LV_EVENT_CLICKED, this);
-
-        buttons_.push_back(btn);
+        lv_obj_set_style_text_color(nameLabel_, lv_palette_main(LV_PALETTE_BLUE), 0);
+        // Hide value in navigation mode
+        lv_obj_add_flag(valueLabel_, LV_OBJ_FLAG_HIDDEN);
+        // Show prev/next labels in navigation mode
+        lv_obj_clear_flag(prev1Label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(prev2Label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(prev3Label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(next1Label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(next2Label_, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(next3Label_, LV_OBJ_FLAG_HIDDEN);
     }
 
-    if (!buttons_.empty())
+    // Update current parameter
+    if (selectedIndex < names.size())
     {
-        setSelectedIndex(0);
-    }
-}
+        lv_label_set_text(nameLabel_, names[selectedIndex].c_str());
+        lv_obj_align(nameLabel_, LV_ALIGN_CENTER, 0, mode == UIMode::CONTROL ? -15 : -5);
 
-void ParameterSelector::setSelectedIndex(size_t index)
-{
-    if (index >= buttons_.size())
-        return;
-
-    // Remove highlight from previously selected button
-    if (selectedIndex_ < buttons_.size())
-    {
-        lv_obj_set_style_bg_color(buttons_[selectedIndex_],
-                                  lv_palette_main(LV_PALETTE_GREY), 0);
+        lv_label_set_text(valueLabel_, values[selectedIndex].c_str());
+        lv_obj_align(valueLabel_, LV_ALIGN_CENTER, 0, 50);
     }
 
-    // Highlight new selection
-    selectedIndex_ = index;
-    lv_obj_set_style_bg_color(buttons_[selectedIndex_],
-                              lv_palette_main(LV_PALETTE_BLUE), 0);
-}
-
-void ParameterSelector::setSelectCallback(SelectCallback callback)
-{
-    selectCallback_ = callback;
-}
-
-void ParameterSelector::buttonEventHandler(lv_event_t *e)
-{
-    lv_obj_t *btn = (lv_obj_t *)lv_event_get_target(e);
-    ParameterSelector *selector = (ParameterSelector *)lv_event_get_user_data(e);
-
-    size_t index = (size_t)lv_obj_get_user_data(btn);
-
-    selector->setSelectedIndex(index);
-
-    if (selector->selectCallback_)
+    // Update previous parameters (3 before) - only matters in NAV mode but update anyway
+    if (selectedIndex >= 1)
     {
-        selector->selectCallback_(index);
+        lv_label_set_text(prev1Label_, names[selectedIndex - 1].c_str());
+        lv_obj_align(prev1Label_, LV_ALIGN_CENTER, 0, -40);
+    }
+    else
+    {
+        lv_label_set_text(prev1Label_, "");
+    }
+
+    if (selectedIndex >= 2)
+    {
+        lv_label_set_text(prev2Label_, names[selectedIndex - 2].c_str());
+        lv_obj_align(prev2Label_, LV_ALIGN_CENTER, 0, -65);
+    }
+    else
+    {
+        lv_label_set_text(prev2Label_, "");
+    }
+
+    if (selectedIndex >= 3)
+    {
+        lv_label_set_text(prev3Label_, names[selectedIndex - 3].c_str());
+        lv_obj_align(prev3Label_, LV_ALIGN_CENTER, 0, -90);
+    }
+    else
+    {
+        lv_label_set_text(prev3Label_, "");
+    }
+
+    // Update next parameters (3 after)
+    if (selectedIndex + 1 < names.size())
+    {
+        lv_label_set_text(next1Label_, names[selectedIndex + 1].c_str());
+        lv_obj_align(next1Label_, LV_ALIGN_CENTER, 0, 30);
+    }
+    else
+    {
+        lv_label_set_text(next1Label_, "");
+    }
+
+    if (selectedIndex + 2 < names.size())
+    {
+        lv_label_set_text(next2Label_, names[selectedIndex + 2].c_str());
+        lv_obj_align(next2Label_, LV_ALIGN_CENTER, 0, 55);
+    }
+    else
+    {
+        lv_label_set_text(next2Label_, "");
+    }
+
+    if (selectedIndex + 3 < names.size())
+    {
+        lv_label_set_text(next3Label_, names[selectedIndex + 3].c_str());
+        lv_obj_align(next3Label_, LV_ALIGN_CENTER, 0, 80);
+    }
+    else
+    {
+        lv_label_set_text(next3Label_, "");
     }
 }
 
@@ -218,36 +236,22 @@ void ParameterSelector::buttonEventHandler(lv_event_t *e)
 // PageView Implementation
 // ============================================================================
 
-PageView::PageView(lv_obj_t *parent, std::shared_ptr<Page> page)
-    : page_(page)
+PageView::PageView(lv_obj_t* parent, std::shared_ptr<Page> page)
+    : page_(page), mode_(UIMode::NAVIGATION)
 {
-
-    // Create main container - full screen, no flex
+    // Create main container - full screen
     container_ = lv_obj_create(parent);
     lv_obj_set_size(container_, LV_PCT(100), LV_PCT(100));
     lv_obj_set_style_pad_all(container_, 0, 0);
     lv_obj_set_style_border_width(container_, 0, 0);
+    lv_obj_clear_flag(container_, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, 0);
 
-    // Create components in layered order (arc as background)
+    // Create value display
     valueDisplay_ = new ValueDisplay(container_);
-    nameDisplay_ = new ParameterNameDisplay(container_);
-    paramSelector_ = new ParameterSelector(container_);
 
-    // Set up parameter selector
-    std::vector<std::string> paramNames;
-    for (size_t i = 0; i < page_->getParameterCount(); i++)
-    {
-        auto param = page_->getParameter(i);
-        if (param)
-        {
-            paramNames.push_back(param->getName());
-        }
-    }
-    paramSelector_->setParameters(paramNames);
-
-    // Set callback for parameter selection
-    paramSelector_->setSelectCallback([this](size_t index)
-                                      { onParameterSelected(index); });
+    // Set up touch callback for mode switching - attach to the ValueDisplay container
+    setupTouchCallback();
 
     // Initial update
     updateDisplay();
@@ -256,8 +260,6 @@ PageView::PageView(lv_obj_t *parent, std::shared_ptr<Page> page)
 PageView::~PageView()
 {
     delete valueDisplay_;
-    delete nameDisplay_;
-    delete paramSelector_;
 
     if (container_)
     {
@@ -272,16 +274,32 @@ void PageView::update()
 
 void PageView::updateDisplay()
 {
-    auto param = page_->getSelectedParameter();
-    if (!param)
-        return;
+    // Gather parameter names and values
+    std::vector<std::string> names;
+    std::vector<std::string> values;
 
-    // Update arc range based on parameter type
-    valueDisplay_->setRange(0, param->getMaxValue());
-    valueDisplay_->setValue(param->getValue());
-    valueDisplay_->setValueText(param->getDisplayValue());
-    nameDisplay_->setParameterName(param->getName());
-    paramSelector_->setSelectedIndex(page_->getSelectedIndex());
+    for (size_t i = 0; i < page_->getParameterCount(); i++)
+    {
+        auto param = page_->getParameter(i);
+        if (param)
+        {
+            names.push_back(param->getName());
+            values.push_back(param->getDisplayValue());
+        }
+    }
+
+    // Get the current parameter's numeric value and max value
+    uint8_t currentValue = 0;
+    uint8_t maxValue = 127;
+    auto currentParam = page_->getSelectedParameter();
+    if (currentParam)
+    {
+        currentValue = currentParam->getValue();
+        maxValue = currentParam->getMaxValue();
+    }
+
+    valueDisplay_->updateParameterList(names, values, page_->getSelectedIndex(),
+        currentValue, maxValue, mode_);
 }
 
 void PageView::incrementValue(int8_t delta)
@@ -304,7 +322,7 @@ void PageView::incrementValue(int8_t delta)
     updateDisplay();
 
     ESP_LOGI(TAG, "Parameter '%s' value changed to %d",
-             param->getName().c_str(), param->getValue());
+        param->getName().c_str(), param->getValue());
 }
 
 void PageView::selectNextParameter()
@@ -319,14 +337,57 @@ void PageView::selectPreviousParameter()
     updateDisplay();
 }
 
-void PageView::onParameterSelected(size_t index)
+void PageView::toggleMode()
 {
-    page_->setSelectedIndex(index);
-    updateDisplay();
-
-    auto param = page_->getSelectedParameter();
-    if (param)
+    if (mode_ == UIMode::NAVIGATION)
     {
-        ESP_LOGI(TAG, "Parameter selected: %s", param->getName().c_str());
+        mode_ = UIMode::CONTROL;
+        ESP_LOGI(TAG, "Switched to CONTROL mode");
+    }
+    else
+    {
+        mode_ = UIMode::NAVIGATION;
+        ESP_LOGI(TAG, "Switched to NAVIGATION mode");
+    }
+    updateDisplay();
+}
+
+void PageView::handleEncoderRotation(int8_t delta)
+{
+    if (mode_ == UIMode::NAVIGATION)
+    {
+        // Navigate through parameters
+        if (delta > 0)
+        {
+            selectNextParameter();
+        }
+        else if (delta < 0)
+        {
+            selectPreviousParameter();
+        }
+    }
+    else // CONTROL mode
+    {
+        // Adjust current parameter value
+        incrementValue(delta);
+    }
+}
+
+void PageView::setupTouchCallback()
+{
+    // Add touch event to ValueDisplay container - use PRESSED event for immediate response
+    lv_obj_t* display_container = valueDisplay_->getContainer();
+    lv_obj_add_flag(display_container, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(display_container, touchEventHandler, LV_EVENT_PRESSED, this);
+    ESP_LOGI(TAG, "Touch callback attached to display container");
+}
+
+void PageView::touchEventHandler(lv_event_t* e)
+{
+    ESP_LOGI(TAG, "Touch event detected - toggling mode");
+    PageView* pageView = (PageView*) lv_event_get_user_data(e);
+    if (pageView)
+    {
+        pageView->toggleMode();
     }
 }

@@ -7,7 +7,16 @@
 #include <functional>
 
 /**
- * @brief Value Display Component - Shows large arc with value label
+ * @brief UI Mode enumeration
+ */
+enum class UIMode
+{
+    NAVIGATION, // Navigate through parameters with encoder
+    CONTROL     // Adjust parameter value with encoder
+};
+
+/**
+ * @brief Value Display Component - Shows list of parameters with current one centered
  */
 class ValueDisplay
 {
@@ -15,64 +24,31 @@ public:
     ValueDisplay(lv_obj_t *parent);
     ~ValueDisplay();
 
-    void setValue(uint8_t value);
-    void setValueText(const std::string &text);
-    void setRange(uint8_t min, uint8_t max);
+    void updateParameterList(const std::vector<std::string> &names,
+                             const std::vector<std::string> &values,
+                             size_t selectedIndex,
+                             uint8_t currentValue,
+                             uint8_t maxValue,
+                             UIMode mode);
 
     lv_obj_t *getContainer() { return container_; }
 
 private:
     lv_obj_t *container_;
-    lv_obj_t *arc_;
-    lv_obj_t *valueLabel_;
+    lv_obj_t *arc_;           // Arc widget showing value
+    lv_obj_t *nameLabel_;     // Current parameter name (large, centered)
+    lv_obj_t *valueLabel_;    // Current parameter value (large, centered)
+    lv_obj_t *prev1Label_;    // -1 parameter name
+    lv_obj_t *prev2Label_;    // -2 parameter name
+    lv_obj_t *prev3Label_;    // -3 parameter name
+    lv_obj_t *next1Label_;    // +1 parameter name
+    lv_obj_t *next2Label_;    // +2 parameter name
+    lv_obj_t *next3Label_;    // +3 parameter name
+    lv_obj_t *modeIndicator_; // Shows current mode (NAV or CTRL)
 };
 
 /**
- * @brief Parameter Name Display - Shows the currently selected parameter name
- */
-class ParameterNameDisplay
-{
-public:
-    ParameterNameDisplay(lv_obj_t *parent);
-    ~ParameterNameDisplay();
-
-    void setParameterName(const std::string &name);
-
-    lv_obj_t *getContainer() { return container_; }
-
-private:
-    lv_obj_t *container_;
-    lv_obj_t *nameLabel_;
-};
-
-/**
- * @brief Parameter Selector - Shows buttons for each parameter
- */
-class ParameterSelector
-{
-public:
-    using SelectCallback = std::function<void(size_t index)>;
-
-    ParameterSelector(lv_obj_t *parent);
-    ~ParameterSelector();
-
-    void setParameters(const std::vector<std::string> &paramNames);
-    void setSelectedIndex(size_t index);
-    void setSelectCallback(SelectCallback callback);
-
-    lv_obj_t *getContainer() { return container_; }
-
-private:
-    static void buttonEventHandler(lv_event_t *e);
-
-    lv_obj_t *container_;
-    std::vector<lv_obj_t *> buttons_;
-    size_t selectedIndex_;
-    SelectCallback selectCallback_;
-};
-
-/**
- * @brief Page View - Main UI component combining all elements
+ * @brief Page View - Main UI component managing modes and display
  */
 class PageView
 {
@@ -85,19 +61,24 @@ public:
     void selectNextParameter();
     void selectPreviousParameter();
 
+    // Mode management
+    UIMode getMode() const { return mode_; }
+    void toggleMode();
+    void handleEncoderRotation(int8_t delta);
+
     std::shared_ptr<Page> getPage() { return page_; }
     lv_obj_t *getContainer() { return container_; }
 
 private:
     void updateDisplay();
-    void onParameterSelected(size_t index);
+    void setupTouchCallback();
+    static void touchEventHandler(lv_event_t *e);
 
     lv_obj_t *container_;
     std::shared_ptr<Page> page_;
+    UIMode mode_;
 
     ValueDisplay *valueDisplay_;
-    ParameterNameDisplay *nameDisplay_;
-    ParameterSelector *paramSelector_;
 };
 
 #endif // UI_COMPONENTS_H
