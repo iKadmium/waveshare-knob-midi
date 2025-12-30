@@ -9,21 +9,65 @@
 #include "user_encoder_bsp.h"
 #include "midi_model.h"
 #include "ui_components.h"
+#include "midi_service.h"
+#include "storage_service.h"
 #include <memory>
 
 static const char* TAG = "main";
 
+// Global MIDI service
+static MidiService* midiService = nullptr;
+
+// Global storage service
+static StorageService* storageService = nullptr;
+
 // Global UI state
 static PageView* currentPageView = nullptr;
+
+// Task to periodically call blemidi_tick for timestamp and buffer handling
+static void midi_tick_task(void* pvParameters)
+{
+    while (1)
+    {
+        if (midiService)
+        {
+            midiService->tick();
+        }
+        vTaskDelay(pdMS_TO_TICKS(15)); // Call every 15ms
+    }
+}
 
 extern "C" void app_main(void)
 {
     ESP_LOGI(TAG, "Starting application");
 
+    // Initialize storage service first
+    storageService = new StorageService();
+    esp_err_t ret = storageService->init();
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to initialize storage service: %s", esp_err_to_name(ret));
+        // Continue anyway, storage won't work but app will
+    }
+
+    // Initialize BLE MIDI service
+    midiService = new MidiService();
+    ret = midiService->init();
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to initialize MIDI service: %s", esp_err_to_name(ret));
+        // Continue anyway, MIDI won't work but UI will
+    }
+    else
+    {
+        // Start MIDI tick task
+        xTaskCreate(midi_tick_task, "midi_tick", 4096, NULL, 5, NULL);
+    }
+
     // Create display/touch handler on heap to keep it alive
     static DisplayTouch* displayTouch = new DisplayTouch();
 
-    esp_err_t ret = displayTouch->init();
+    ret = displayTouch->init();
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to initialize display/touch: %s", esp_err_to_name(ret));
@@ -65,17 +109,26 @@ extern "C" void app_main(void)
         auto page1 = std::make_shared<Page>("Page 1");
 
         // Add CC parameters
-        page1->addParameter(std::make_shared<CCParameter>("DAW", 0, 74));
-        page1->addParameter(std::make_shared<CCParameter>("Mic", 0, 71));
-        page1->addParameter(std::make_shared<CCParameter>("Guitar", 0, 73));
+        page1->addParameter(std::make_shared<CCParameter>("DAW", 0, 87));
+        page1->addParameter(std::make_shared<CCParameter>("Mic", 0, 81));
+        page1->addParameter(std::make_shared<CCParameter>("Guitar", 0, 85));
+        page1->addParameter(std::make_shared<CCParameter>("Mac", 0, 86));
 
         // Add Program Change parameter with instrument names
         std::vector<std::string> instruments = {
             "Clean", "Crunch", "Rhythm", "Lead"
         };
         page1->addParameter(std::make_shared<ProgramChangeParameter>(
-            "Instrument", 0, instruments)
+            "Instrument", 1, instruments)
         );
+
+        // Load saved parameter values
+        if (storageService)
+        {
+            storageService->loadPage("page1", page1);
+            ESP_LOGI(TAG, "Loaded parameter values from storage");
+        }
+
         // Create UI
         lv_obj_t* screen = lv_screen_active();
         currentPageView = new PageView(screen, page1);
@@ -104,6 +157,25 @@ extern "C" void app_main(void)
             if (displayTouch->lock(100) && currentPageView)
             {
                 currentPageView->handleEncoderRotation(-1);
+
+                // Send MIDI if in CONTROL mode
+                if (currentPageView->getMode() == UIMode::CONTROL && midiService)
+                {
+                    auto param = currentPageView->getPage()->getSelectedParameter();
+                    if (param)
+                    {
+                        midiService->sendParameter(param);
+
+                        // Save the parameter value to storage
+                        if (storageService)
+                        {
+                            size_t paramIndex = currentPageView->getPage()->getSelectedIndex();
+                            std::string key = "page1_p" + std::to_string(paramIndex);
+                            storageService->saveParameterValue(key, param->getValue());
+                        }
+                    }
+                }
+
                 displayTouch->unlock();
             }
         }
@@ -115,6 +187,25 @@ extern "C" void app_main(void)
             if (displayTouch->lock(100) && currentPageView)
             {
                 currentPageView->handleEncoderRotation(1);
+
+                // Send MIDI if in CONTROL mode
+                if (currentPageView->getMode() == UIMode::CONTROL && midiService)
+                {
+                    auto param = currentPageView->getPage()->getSelectedParameter();
+                    if (param)
+                    {
+                        midiService->sendParameter(param);
+
+                        // Save the parameter value to storage
+                        if (storageService)
+                        {
+                            size_t paramIndex = currentPageView->getPage()->getSelectedIndex();
+                            std::string key = "page1_p" + std::to_string(paramIndex);
+                            storageService->saveParameterValue(key, param->getValue());
+                        }
+                    }
+                }
+
                 displayTouch->unlock();
             }
         }

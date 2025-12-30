@@ -40,8 +40,6 @@
 #define EXAMPLE_LVGL_TASK_STACK_SIZE (8 * 1024)
 #define EXAMPLE_LVGL_TASK_PRIORITY 2
 
-#define EXAMPLE_USE_TOUCH 1 // Without tp ---- Touch off
-
 // bit
 
 #define SET_BIT(reg, bit) (reg |= ((uint32_t)0x01 << bit))

@@ -72,7 +72,7 @@ public:
      * @brief Get the LVGL display object
      * @return Pointer to the LVGL display
      */
-    lv_display_t *getDisplay() { return disp; }
+    lv_display_t* getDisplay() { return disp; }
 
 private:
     // Hardware handles
@@ -80,24 +80,22 @@ private:
     esp_lcd_panel_handle_t panel_handle;
     esp_timer_handle_t lvgl_tick_timer;
     SemaphoreHandle_t lvgl_mux;
-    lv_display_t *disp;
+    lv_display_t* disp;
 
     // Note: Encoder is now handled by user_encoder_bsp component
 
     // LVGL callbacks
-    static void lvglFlushCb(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map);
-    static void lvglRounderCb(lv_event_t *e);
+    static void lvglFlushCb(lv_display_t* disp, const lv_area_t* area, uint8_t* px_map);
+    static void lvglRounderCb(lv_event_t* e);
     static bool notifyLvglFlushReady(esp_lcd_panel_io_handle_t panel_io,
-                                     esp_lcd_panel_io_event_data_t *edata,
-                                     void *user_ctx);
-    static void increaseLvglTick(void *arg);
+        esp_lcd_panel_io_event_data_t* edata,
+        void* user_ctx);
+    static void increaseLvglTick(void* arg);
 
-#if EXAMPLE_USE_TOUCH
-    static void lvglTouchCb(lv_indev_t *indev, lv_indev_data_t *data);
-#endif
+    static void lvglTouchCb(lv_indev_t* indev, lv_indev_data_t* data);
 
     // Task functions
-    static void lvglPortTask(void *arg);
+    static void lvglPortTask(void* arg);
 };
 
 #endif // DISPLAY_TOUCH_H
