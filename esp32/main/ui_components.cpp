@@ -42,13 +42,6 @@ ValueDisplay::ValueDisplay(lv_obj_t* parent)
     lv_style_set_arc_width(&style_arc_bg, 15);
     lv_obj_add_style(arc_, &style_arc_bg, LV_PART_MAIN);
 
-    // Create mode indicator (top center for round display)
-    modeIndicator_ = lv_label_create(container_);
-    lv_label_set_text(modeIndicator_, "NAV");
-    lv_obj_set_style_text_font(modeIndicator_, &lv_font_montserrat_16, 0);
-    lv_obj_set_style_text_color(modeIndicator_, lv_palette_main(LV_PALETTE_CYAN), 0);
-    lv_obj_align(modeIndicator_, LV_ALIGN_TOP_MID, 0, 10);
-
     // Create previous parameter labels (above center, closer together)
     prev3Label_ = lv_label_create(container_);
     lv_label_set_text(prev3Label_, "");
@@ -107,6 +100,13 @@ ValueDisplay::ValueDisplay(lv_obj_t* parent)
     lv_obj_set_style_text_color(next3Label_, lv_color_hex(0x606060), 0);
     lv_obj_set_style_text_align(next3Label_, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(next3Label_, LV_ALIGN_CENTER, 0, 80);
+
+    // Create Bluetooth status icon (center-bottom)
+    btIconLabel_ = lv_label_create(container_);
+    lv_label_set_text(btIconLabel_, LV_SYMBOL_BLUETOOTH);
+    lv_obj_set_style_text_font(btIconLabel_, &lv_font_montserrat_20, 0);
+    lv_obj_set_style_text_color(btIconLabel_, lv_color_hex(0x404040), 0); // Start gray (disconnected)
+    lv_obj_align(btIconLabel_, LV_ALIGN_BOTTOM_MID, 0, -10);
 }
 
 ValueDisplay::~ValueDisplay()
@@ -124,9 +124,6 @@ void ValueDisplay::updateParameterList(const std::vector<std::string>& names,
     uint8_t maxValue,
     UIMode mode)
 {
-    // Update mode indicator
-    lv_label_set_text(modeIndicator_, mode == UIMode::NAVIGATION ? "NAV" : "CTRL");
-
     // Update arc with the actual numeric value
     lv_arc_set_range(arc_, 0, maxValue);
     lv_arc_set_value(arc_, currentValue);
@@ -229,6 +226,20 @@ void ValueDisplay::updateParameterList(const std::vector<std::string>& names,
     else
     {
         lv_label_set_text(next3Label_, "");
+    }
+}
+
+void ValueDisplay::updateBluetoothStatus(bool connected)
+{
+    if (connected)
+    {
+        // Connected: bright blue
+        lv_obj_set_style_text_color(btIconLabel_, lv_palette_main(LV_PALETTE_BLUE), 0);
+    }
+    else
+    {
+        // Disconnected: dark gray
+        lv_obj_set_style_text_color(btIconLabel_, lv_color_hex(0x404040), 0);
     }
 }
 
@@ -389,5 +400,13 @@ void PageView::touchEventHandler(lv_event_t* e)
     if (pageView)
     {
         pageView->toggleMode();
+    }
+}
+
+void PageView::updateBluetoothStatus(bool connected)
+{
+    if (valueDisplay_)
+    {
+        valueDisplay_->updateBluetoothStatus(connected);
     }
 }

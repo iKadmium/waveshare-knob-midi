@@ -165,3 +165,12 @@ void MidiService::tick()
         blemidi_tick();
     }
 }
+
+bool MidiService::isConnected() const
+{
+    if (!initialized_)
+    {
+        return false;
+    }
+    return blemidi_is_connected() != 0;
+}

@@ -115,11 +115,11 @@ extern "C" void app_main(void)
         page1->addParameter(std::make_shared<CCParameter>("Mac", 0, 86));
 
         // Add Program Change parameter with instrument names
-        std::vector<std::string> instruments = {
+        std::vector<std::string> guitarPresets = {
             "Clean", "Crunch", "Rhythm", "Lead"
         };
         page1->addParameter(std::make_shared<ProgramChangeParameter>(
-            "Instrument", 1, instruments)
+            "Guitar Effects", 1, guitarPresets)
         );
 
         // Load saved parameter values
@@ -141,6 +141,13 @@ extern "C" void app_main(void)
     // Main loop - monitor encoder events
     while (1)
     {
+        // Update Bluetooth connection status indicator
+        if (displayTouch->lock(10) && currentPageView && midiService)
+        {
+            currentPageView->updateBluetoothStatus(midiService->isConnected());
+            displayTouch->unlock();
+        }
+
         // Wait for encoder events (left or right rotation)
         EventBits_t bits = xEventGroupWaitBits(
             knob_even_,

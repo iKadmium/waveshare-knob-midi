@@ -200,6 +200,8 @@ static const uint8_t blemidi_ccc[2] = { 0x00, 0x00 };
 
 void (*blemidi_callback_midi_message_received)(uint8_t blemidi_port, uint16_t timestamp, uint8_t midi_status, uint8_t* remaining_message, size_t len, size_t continued_sysex_pos);
 
+static int32_t blemidi_connected = 0;
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Timestamp handling
@@ -563,8 +565,8 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
     break;
   case ESP_GAP_BLE_SCAN_RSP_DATA_SET_COMPLETE_EVT:
     adv_config_done &= (~SCAN_RSP_CONFIG_FLAG);
-    if (adv_config_done == 0)    
-{
+    if (adv_config_done == 0)
+    {
       esp_ble_gap_start_advertising(&adv_params);
     }
     break;
@@ -629,21 +631,21 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
     ESP_LOGI(BLEMIDI_TAG, "ESP_GAP_BLE_KEY_EVT");
     break;
   case ESP_GAP_BLE_AUTH_CMPL_EVT:
+  {
+    esp_bd_addr_t bd_addr;
+    memcpy(bd_addr, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
+    ESP_LOGI(BLEMIDI_TAG, "ESP_GAP_BLE_AUTH_CMPL_EVT: %s",
+      param->ble_security.auth_cmpl.success ? "SUCCESS" : "FAILED");
+    if (!param->ble_security.auth_cmpl.success)
     {
-      esp_bd_addr_t bd_addr;
-      memcpy(bd_addr, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
-      ESP_LOGI(BLEMIDI_TAG, "ESP_GAP_BLE_AUTH_CMPL_EVT: %s",
-        param->ble_security.auth_cmpl.success ? "SUCCESS" : "FAILED");
-      if (!param->ble_security.auth_cmpl.success)
-      {
-        ESP_LOGE(BLEMIDI_TAG, "Authentication failed, status: 0x%x", param->ble_security.auth_cmpl.fail_reason);
-      }
-      else
-      {
-        ESP_LOGI(BLEMIDI_TAG, "Authentication complete, address type: %d", param->ble_security.auth_cmpl.addr_type);
-      }
+      ESP_LOGE(BLEMIDI_TAG, "Authentication failed, status: 0x%x", param->ble_security.auth_cmpl.fail_reason);
     }
-    break;
+    else
+    {
+      ESP_LOGI(BLEMIDI_TAG, "Authentication complete, address type: %d", param->ble_security.auth_cmpl.addr_type);
+    }
+  }
+  break;
   case ESP_GAP_BLE_REMOVE_BOND_DEV_COMPLETE_EVT:
     ESP_LOGI(BLEMIDI_TAG, "ESP_GAP_BLE_REMOVE_BOND_DEV_COMPLETE_EVT, status: %d", param->remove_bond_dev_cmpl.status);
     break;
@@ -689,8 +691,8 @@ static void blemidi_prepare_write_event_env(esp_gatt_if_t gatts_if, prepare_type
       gatt_rsp->attr_value.auth_req = ESP_GATT_AUTH_REQ_NONE;
       memcpy(gatt_rsp->attr_value.value, param->write.value, param->write.len);
       esp_err_t response_err = esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, status, gatt_rsp);
-      if (response_err != ESP_OK)      
-{
+      if (response_err != ESP_OK)
+      {
         ESP_LOGE(BLEMIDI_TAG, "Send response error");
       }
       free(gatt_rsp);
@@ -817,6 +819,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
   case ESP_GATTS_CONNECT_EVT:
     ESP_LOGI(BLEMIDI_TAG, "ESP_GATTS_CONNECT_EVT, conn_id = %d", param->connect.conn_id);
     ESP_LOG_BUFFER_HEX(BLEMIDI_TAG, param->connect.remote_bda, 6);
+    blemidi_connected = 1;
     esp_ble_conn_update_params_t conn_params = { 0 };
     memcpy(conn_params.bda, param->connect.remote_bda, sizeof(esp_bd_addr_t));
     /* For the iOS system, please refer to Apple official documents about the BLE connection parameters restrictions. */
@@ -829,12 +832,13 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
     break;
   case ESP_GATTS_DISCONNECT_EVT:
     ESP_LOGI(BLEMIDI_TAG, "ESP_GATTS_DISCONNECT_EVT, reason = 0x%x", param->disconnect.reason);
+    blemidi_connected = 0;
     esp_ble_gap_start_advertising(&adv_params);
     break;
   case ESP_GATTS_CREAT_ATTR_TAB_EVT:
   {
-    if (param->add_attr_tab.status != ESP_GATT_OK)    
-{
+    if (param->add_attr_tab.status != ESP_GATT_OK)
+    {
       ESP_LOGE(BLEMIDI_TAG, "create attribute table failed, error code=0x%x", param->add_attr_tab.status);
     }
     else if (param->add_attr_tab.num_handle != HRS_IDX_NB)
@@ -959,7 +963,7 @@ int32_t blemidi_init(void* _callback_midi_message_received)
   uint8_t rsp_key = ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK;
   uint8_t auth_option = ESP_BLE_ONLY_ACCEPT_SPECIFIED_AUTH_DISABLE;
   uint8_t oob_support = ESP_BLE_OOB_DISABLE;
-  
+
   esp_ble_gap_set_security_param(ESP_BLE_SM_AUTHEN_REQ_MODE, &auth_req, sizeof(uint8_t));
   esp_ble_gap_set_security_param(ESP_BLE_SM_IOCAP_MODE, &iocap, sizeof(uint8_t));
   esp_ble_gap_set_security_param(ESP_BLE_SM_MAX_KEY_SIZE, &key_size, sizeof(uint8_t));
@@ -1016,6 +1020,14 @@ int32_t blemidi_init(void* _callback_midi_message_received)
   return 0; // no error
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Connection Status
+////////////////////////////////////////////////////////////////////////////////////////////////////
+int32_t blemidi_is_connected(void)
+{
+  return blemidi_connected;
+}
 
 #if BLEMIDI_ENABLE_CONSOLE
 ////////////////////////////////////////////////////////////////////////////////////////////////////

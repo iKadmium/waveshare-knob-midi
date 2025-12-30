@@ -22,9 +22,7 @@
         },
         "runArgs": [
                 "--privileged",
-                "--device=/dev/bus/usb:/dev/bus/usb",
-                "--userns=host",
-                "--group-add=keep-groups"
+                "--device=/dev/bus/usb:/dev/bus/usb"
         ],
         "mounts": [
                 "source=/dev/bus/usb,target=/dev/bus/usb,type=bind"

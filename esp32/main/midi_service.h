@@ -47,6 +47,12 @@ public:
      */
     void tick();
 
+    /**
+     * @brief Check if BLE MIDI is connected
+     * @return true if connected, false otherwise
+     */
+    bool isConnected() const;
+
 private:
     bool initialized_;
 };

@@ -21,13 +21,15 @@ enum class ParameterType
 class Parameter
 {
 public:
-    Parameter(const std::string &name, uint8_t channel)
-        : name_(name), channel_(channel & 0x0F), value_(0) {}
+    Parameter(const std::string& name, uint8_t channel)
+        : name_(name), channel_(channel & 0x0F), value_(0)
+    {
+    }
 
     virtual ~Parameter() = default;
 
     // Getters
-    const std::string &getName() const { return name_; }
+    const std::string& getName() const { return name_; }
     uint8_t getChannel() const { return channel_; }
     uint8_t getValue() const { return value_; }
     virtual ParameterType getType() const = 0;
@@ -62,8 +64,10 @@ protected:
 class CCParameter : public Parameter
 {
 public:
-    CCParameter(const std::string &name, uint8_t channel, uint8_t ccNumber)
-        : Parameter(name, channel), ccNumber_(ccNumber & 0x7F) {}
+    CCParameter(const std::string& name, uint8_t channel, uint8_t ccNumber)
+        : Parameter(name, channel), ccNumber_(ccNumber & 0x7F)
+    {
+    }
 
     ParameterType getType() const override { return ParameterType::CC; }
 
@@ -71,7 +75,7 @@ public:
 
     std::string getDisplayValue() const override
     {
-        return "CC" + std::to_string(ccNumber_) + ": " + std::to_string(value_);
+        return std::to_string(value_);
     }
 
 private:
@@ -84,13 +88,15 @@ private:
 class ProgramChangeParameter : public Parameter
 {
 public:
-    ProgramChangeParameter(const std::string &name, uint8_t channel,
-                           const std::vector<std::string> &programNames)
-        : Parameter(name, channel), programNames_(programNames) {}
+    ProgramChangeParameter(const std::string& name, uint8_t channel,
+        const std::vector<std::string>& programNames)
+        : Parameter(name, channel), programNames_(programNames)
+    {
+    }
 
     ParameterType getType() const override { return ParameterType::PROGRAM_CHANGE; }
 
-    const std::vector<std::string> &getProgramNames() const { return programNames_; }
+    const std::vector<std::string>& getProgramNames() const { return programNames_; }
 
     std::string getDisplayValue() const override
     {
@@ -116,14 +122,14 @@ private:
 class Page
 {
 public:
-    Page(const std::string &name) : name_(name), selectedIndex_(0) {}
+    Page(const std::string& name) : name_(name), selectedIndex_(0) {}
 
     void addParameter(std::shared_ptr<Parameter> param)
     {
         parameters_.push_back(param);
     }
 
-    const std::string &getName() const { return name_; }
+    const std::string& getName() const { return name_; }
 
     size_t getParameterCount() const { return parameters_.size(); }
 
