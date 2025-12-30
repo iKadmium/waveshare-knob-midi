@@ -111,8 +111,11 @@ extern "C" void app_main(void)
         // Add CC parameters
         page1->addParameter(std::make_shared<CCParameter>("DAW", 0, 87));
         page1->addParameter(std::make_shared<CCParameter>("Mic", 0, 81));
+        page1->addParameter(std::make_shared<BooleanCCParameter>("Mic Mute", 0, 93));
         page1->addParameter(std::make_shared<CCParameter>("Guitar", 0, 85));
+        page1->addParameter(std::make_shared<BooleanCCParameter>("Guitar Mute", 0, 103));
         page1->addParameter(std::make_shared<CCParameter>("Mac", 0, 86));
+
 
         // Add Program Change parameter with instrument names
         std::vector<std::string> guitarPresets = {

@@ -12,6 +12,7 @@
 enum class ParameterType
 {
     CC,
+    BOOLEAN_CC,
     PROGRAM_CHANGE
 };
 
@@ -76,6 +77,51 @@ public:
     std::string getDisplayValue() const override
     {
         return std::to_string(value_);
+    }
+
+private:
+    uint8_t ccNumber_; // 7-bit (0-127)
+};
+
+/**
+ * @brief Boolean CC Parameter (toggles between 0 and 127)
+ * Useful for mute, solo, or other on/off controls
+ */
+class BooleanCCParameter : public Parameter
+{
+public:
+    BooleanCCParameter(const std::string& name, uint8_t channel, uint8_t ccNumber)
+        : Parameter(name, channel), ccNumber_(ccNumber & 0x7F)
+    {
+    }
+
+    ParameterType getType() const override { return ParameterType::BOOLEAN_CC; }
+
+    uint8_t getCCNumber() const { return ccNumber_; }
+
+    std::string getDisplayValue() const override
+    {
+        return value_ == 0 ? "OFF" : "ON";
+    }
+
+    uint8_t getMaxValue() const override
+    {
+        return 127; // Boolean: 0 or 127
+    }
+
+    void toggle()
+    {
+        value_ = (value_ == 0) ? 127 : 0;
+    }
+
+    void turnOn()
+    {
+        value_ = 127;
+    }
+
+    void turnOff()
+    {
+        value_ = 0;
     }
 
 private:

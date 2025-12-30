@@ -147,6 +147,16 @@ void MidiService::sendParameter(std::shared_ptr<Parameter> param)
         }
         break;
     }
+    case ParameterType::BOOLEAN_CC:
+    {
+        // Boolean CC also sends as a regular CC message (value is either 0 or 127)
+        auto boolParam = std::static_pointer_cast<BooleanCCParameter>(param);
+        if (boolParam)
+        {
+            sendCC(boolParam->getChannel(), boolParam->getCCNumber(), boolParam->getValue());
+        }
+        break;
+    }
     case ParameterType::PROGRAM_CHANGE:
     {
         sendProgramChange(param->getChannel(), param->getValue());

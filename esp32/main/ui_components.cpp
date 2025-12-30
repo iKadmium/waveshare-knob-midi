@@ -319,16 +319,37 @@ void PageView::incrementValue(int8_t delta)
     if (!param)
         return;
 
-    int16_t newValue = param->getValue() + delta;
-    uint8_t maxValue = param->getMaxValue();
+    // Special handling for boolean CC parameters - directional control (no wrapping)
+    // Increment (rotate right) turns ON, decrement (rotate left) turns OFF
+    if (param->getType() == ParameterType::BOOLEAN_CC)
+    {
+        auto boolParam = std::static_pointer_cast<BooleanCCParameter>(param);
+        if (boolParam)
+        {
+            if (delta > 0)
+            {
+                boolParam->turnOn();
+            }
+            else if (delta < 0)
+            {
+                boolParam->turnOff();
+            }
+        }
+    }
+    else
+    {
+        // Normal parameter value adjustment
+        int16_t newValue = param->getValue() + delta;
+        uint8_t maxValue = param->getMaxValue();
 
-    // Clamp to parameter's range
-    if (newValue < 0)
-        newValue = 0;
-    if (newValue > maxValue)
-        newValue = maxValue;
+        // Clamp to parameter's range
+        if (newValue < 0)
+            newValue = 0;
+        if (newValue > maxValue)
+            newValue = maxValue;
 
-    param->setValue(static_cast<uint8_t>(newValue));
+        param->setValue(static_cast<uint8_t>(newValue));
+    }
 
     updateDisplay();
 
