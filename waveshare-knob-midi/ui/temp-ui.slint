@@ -1,0 +1,108 @@
+import { VerticalBox, ProgressIndicator } from "std-widgets.slint";
+export component Example inherits Window {
+    width: 480px;
+    height: 480px;
+    
+    in property <[string]> parameters: ["Volume", "Cutoff", "Resonance", "Attack", "Decay", "Next", "Next", "After"];
+    in-out property <int> selected-index: 0;
+    in-out property <[int]> values: [64, 100, 32, 45, 15, 6, 25, 95];
+    in-out property <bool> is-edit-mode: false;
+
+    callback toggle-mode();
+    callback change-value(int);
+
+    toggle-mode => { root.is-edit-mode = !root.is-edit-mode; }
+    change-value(dir) => {
+        if (!root.is-edit-mode) {
+            let destination = root.selected-index + dir;
+            root.selected-index = Math.clamp(destination, 0, root.parameters.length - 1);
+        } else {
+            let destination = values[root.selected-index] + dir;
+            root.values[root.selected-index] = Math.clamp(destination, 0, 127);
+        }
+    }
+
+    forward-focus: key-handler;
+    key-handler := FocusScope {
+        key-pressed(event) => {
+            if(event.text == Key.Space) {
+                root.toggle-mode();
+                return accept;
+            }
+            if (event.text == Key.UpArrow) {
+                root.change-value(-1);
+                return accept;
+            }
+            if (event.text == Key.DownArrow) {
+                root.change-value(1);
+                return accept;
+            }
+            reject;
+        }
+    }
+
+
+    TouchArea {
+        width: 100%;
+        height: 100%;
+        clicked => {root.is-edit-mode = !root.is-edit-mode;}
+    }
+
+    Rectangle {
+        width: 100%;
+        height: 100%;
+
+        for param[idx] in root.parameters : Rectangle {
+            // set local math
+            property <bool> is-selected: (idx == root.selected-index);
+
+            y: 240px - (60px / 2) + ((idx - root.selected-index) * (60px + 15px));
+            width: self.is-selected ? 360px : 260px;
+            height: 60px;
+
+            x: self.is-selected ? 60px : 110px;
+
+            background: self.is-selected ? #1a2531 : #2c3e50;
+            border-radius: 8px;
+            clip: true;
+
+            animate y { duration: 200ms; easing: ease-in-out;}
+            animate width { duration: 200ms; easing: ease-in-out;}
+            animate x { duration: 200ms; easing: ease-in-out;}
+            
+            Rectangle {
+                x: 0;
+                y: 0;
+                height: 100%;
+
+                background: parent.is-selected ? (root.is-edit-mode ? #d35400.with-alpha(0.8) : #2980b9.with-alpha(0.7)) : #95a5a6.with-alpha(0.15);
+                width: (parent.is-selected ? 360px : 260px) * (root.values[idx] / 127);
+
+                animate width { duration: 200ms; easing: ease-in-out; }
+                animate background { duration: 150ms; }
+            }
+
+            HorizontalLayout {
+                padding-left: 20px;
+                padding-right: 20px;
+                alignment: space-between;
+
+                Text {
+                    text: param;
+                    font-size: 18px;
+                    color: #FFFFFF;
+                    vertical-alignment: center;
+                    font-weight: idx == root.selected-index ? 700 : 400;
+                }
+
+                Text {
+                    text: root.values[idx];
+                    font-size: 20px;
+                    color: (idx == root.selected-index && root.is-edit-mode) ? #f1c40f : #bdc3c7;
+                    vertical-alignment: center;
+                    font-weight: 700;
+                }
+            }
+        }
+    }
+}

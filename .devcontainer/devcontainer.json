@@ -1,25 +1,30 @@
 {
-	"name": "ESP32 Rust Environment",
-	"image": "espressif/idf-rust:esp32s3_latest",
-	"remoteUser": "esp",
-	"features": {},
+	"name": "Rust ESP32 Development",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"runArgs": [
+		"--privileged",
+		"-v",
+		"/dev:/dev"
+	],
+	"containerEnv": {
+		"ESP_IDF_TOOLS_INSTALL_DIR": "global"
+	},
 	"customizations": {
 		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"rust-analyzer.cargo.target": "xtensa-esp32s3-espidf",
+				"rust-analyzer.cargo.allTargets": false
+			},
 			"extensions": [
 				"rust-lang.rust-analyzer",
-				"serayuzgur.crates",
 				"tamasfe.even-better-toml",
-				"mutantdino.resourcemonitor"
-			],
-			"settings": {
-				"rust-analyzer.check.command": "clippy"
-			}
+				"mutantdino.resourcemonitor",
+				"Slint.slint"
+			]
 		}
 	},
-	"mounts": [
-		//"source=/run/udev,target=/run/udev,type=bind,readonly"
-	],
-	"runArgs": [
-		"--privileged"
-	]
+	"remoteUser": "esp"
 }
