@@ -2,9 +2,9 @@
 name = "waveshare-knob-midi"
 version = "0.1.0"
 authors = ["Jesse Higginson <kadmium@gmail.com>"]
-edition = "2021"
+edition = "2024"
 resolver = "2"
-rust-version = "1.82"
+rust-version = "1.93.0"
 
 [[bin]]
 name = "waveshare-knob-midi"
@@ -26,7 +26,8 @@ log = "0.4"
 esp-idf-svc = { version = "0.52.1", features = ["critical-section", "embassy-time-driver", "embassy-sync"] }
 # Remove `generic-queue-8` if you plan to use `embassy-time` WITH `embassy-executor`
 embassy-time = { version = "0.5", features = ["generic-queue-8"] }
-slint = "1.12.1"
+slint = {version = "1.17.0", default-features = false, features = ["compat-1-2", "renderer-software", "unsafe-single-threaded", "libm"]}
 
 [build-dependencies]
 embuild = "0.33"
+slint-build = "1.17.0"
